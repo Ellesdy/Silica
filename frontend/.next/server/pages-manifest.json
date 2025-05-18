@@ -1,0 +1,11 @@
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/api/deployment": "pages/api/deployment.js",
+  "/": "pages/index.js",
+  "/ai-marketplace": "pages/ai-marketplace.js",
+  "/api/whitepaper": "pages/api/whitepaper.js",
+  "/whitepaper": "pages/whitepaper.js",
+  "/dashboard": "pages/dashboard.js"
+}

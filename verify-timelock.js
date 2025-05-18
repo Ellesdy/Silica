@@ -1,0 +1,1 @@
+"const { ethers } = require('hardhat'); async function main() { console.log('Constructing empty arrays...'); const emptyArray = []; console.log(emptyArray); console.log(JSON.stringify(emptyArray)); } main();"  

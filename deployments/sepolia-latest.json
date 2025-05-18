@@ -1,0 +1,14 @@
+{
+  "network": "sepolia",
+  "timestamp": "2025-05-13T04:57:06.320Z",
+  "deployer": "0x7F7B1D52256dC39B209065778B177af4D1DE87a7",
+  "contracts": {
+    "SilicaToken": "0x177470B57b9959E48F8fC09943914b2F8423A08F",
+    "SilicaTimelock": "0xEfdb46a79C2F455A4406759B9B82540EFb61A9Cd",
+    "SilicaTreasury": "0xEeC6F30EABB312975521f80857cebd17bECb50a0",
+    "SilicaAIOracle": "0x0E90B7f947363F099886aE47Ccfd964C728579D7",
+    "SilicaAIController": "0xfCc7EfF617e9c8c8627cFEe1Ba9b408aFD245b5E",
+    "SilicaModelRegistry": "0x767bDeD99f0d2d44F9f9cC1A7b34792494695655",
+    "SilicaExecutionEngine": "0x60660BF9bbcb0E2385D2161E4A3c4931bf7AF083"
+  }
+}

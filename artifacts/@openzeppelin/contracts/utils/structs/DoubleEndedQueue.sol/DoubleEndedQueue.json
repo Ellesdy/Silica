@@ -1,0 +1,21 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "DoubleEndedQueue",
+  "sourceName": "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "Empty",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OutOfBounds",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea264697066735822122031efe529585f4fb94cf525c4d91e9a1d7d471ddec08f503c32bc77e9baac734164736f6c634300081c0033",
+  "deployedBytecode": "0x600080fdfea264697066735822122031efe529585f4fb94cf525c4d91e9a1d7d471ddec08f503c32bc77e9baac734164736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

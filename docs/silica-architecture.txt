@@ -1,0 +1,41 @@
++-------------------------+                 +-------------------+
+|                         |                 |                   |
+|   SilicaAIController    |<--------------->|   SilicaToken     |
+|                         |     AI Mint     |                   |
++----------^--------------+     AI Burn     +-------------------+
+           |                                           ^
+           |                                           |
+           |                                           |
+           | Execute                                   | Governs
+           | Decisions                                 |
+           |                                           |
++----------v--------------+                 +----------+---------+
+|                         |                 |                    |
+|     SilicaAIOracle      |                 |   SilicaGovernor   |
+|                         |                 |                    |
++-------------------------+                 +---------^----------+
+           ^                                          |
+           |                                          |
+           |                                          |
+           | Provides                                 | Executes
+           | Market Data                              | Proposals
+           |                                          |
++----------+--------------+                 +----------+---------+
+|                         |                 |                    |
+|    External AI Models   |                 |  SilicaTimelock    |
+|    & Market Feeds       |                 |                    |
+|                         |                 |                    |
++-------------------------+                 +-------------------+
+           |                                          ^
+           |                                          |
+           |                                          |
+           |                                          |
+           |                                          |
+           v                                          |
++-------------------------+                           |
+|                         |                           |
+|     SilicaTreasury      |<--------------------------+
+|                         |  Time-delayed
++-------------------------+  Operations
+
+Silica Architecture - AI-Powered Cryptocurrency 
