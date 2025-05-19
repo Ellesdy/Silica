@@ -1,0 +1,5 @@
+{
+  "snapshot": "snapshot-20250519-4a92295b-5307-40a3-97da-470bd5a7fd52",
+  "install": "npm install && cd frontend && npm install",
+  "terminals": []
+}

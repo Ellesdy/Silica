@@ -30,7 +30,7 @@ describe("SilicaAIController", function () {
 
     // Deploy SilicaTreasury
     const SilicaTreasury = await ethers.getContractFactory("SilicaTreasury");
-    silicaTreasury = await SilicaTreasury.deploy();
+    silicaTreasury = await SilicaTreasury.deploy(owner.address);
     await silicaTreasury.waitForDeployment();
 
     // Deploy SilicaAIController
@@ -53,7 +53,7 @@ describe("SilicaAIController", function () {
 
     // Setup permissions
     await silicaToken.transferOwnership(await silicaAIController.getAddress());
-    await silicaTreasury.grantRole(await silicaTreasury.MANAGER_ROLE(), await silicaAIController.getAddress());
+    await silicaTreasury.grantRole(ethers.keccak256(ethers.toUtf8Bytes("GOVERNOR_ROLE")), await silicaAIController.getAddress());
     await silicaAIController.addAIOperator(aiOperator.address);
     await silicaAIController.grantRole(HUMAN_ADMIN_ROLE, humanAdmin.address);
 
