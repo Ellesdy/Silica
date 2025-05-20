@@ -168,7 +168,9 @@ contract SilicaAIController is AccessControl, ReentrancyGuard {
             IERC20(tokenOut).approve(address(treasury), amountOut);
             treasury.depositFunds(tokenOut, amountOut);
         } else {
-            // Handle ETH case if needed
+            // Handle ETH case - use the receive() function of treasury
+            (bool success, ) = address(treasury).call{value: amountOut}("");
+            require(success, "ETH transfer to treasury failed");
         }
         
         emit TradeExecuted(tokenIn, tokenOut, amountIn, amountOut, rationale);

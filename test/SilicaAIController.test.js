@@ -320,6 +320,201 @@ describe("SilicaAIController", function () {
     });
   });
 
+  describe("Trade Execution", function () {
+    beforeEach(async function() {
+      // Fund the mockDex with tokens for swaps
+      await mockToken.mint(await mockDex.getAddress(), ethers.parseEther("1000000"));
+      
+      // Fund the mockDex with ETH for swaps
+      await owner.sendTransaction({
+        to: await mockDex.getAddress(),
+        value: ethers.parseEther("100")
+      });
+    });
+    
+    it("Should execute token to token trade", async function() {
+      const treasuryAddr = await silicaTreasury.getAddress();
+      const controllerAddr = await silicaAIController.getAddress();
+      const mockTokenAddr = await mockToken.getAddress();
+      const mockDexAddr = await mockDex.getAddress();
+      
+      // Initial balances
+      const initialTreasuryTokenBalance = await mockToken.balanceOf(treasuryAddr);
+      
+      // Prepare swap data
+      const amountIn = ethers.parseEther("1000");
+      const minAmountOut = ethers.parseEther("1800"); // Expecting 2x return from MockDex
+      const swapData = mockDex.interface.encodeFunctionData("swap", [
+        mockTokenAddr,
+        await silicaToken.getAddress(),
+        amountIn,
+        minAmountOut
+      ]);
+      
+      // Execute the trade
+      await silicaAIController.connect(aiOperator).executeTrade(
+        mockTokenAddr,
+        await silicaToken.getAddress(),
+        amountIn,
+        minAmountOut,
+        mockDexAddr,
+        swapData,
+        "Strategic token swap"
+      );
+      
+      // Check results - 2000 tokens (2x) should be added to treasury's silicaToken balance
+      const treasuryTokenBalance = await mockToken.balanceOf(treasuryAddr);
+      const treasurySilicaBalance = await silicaToken.balanceOf(treasuryAddr);
+      
+      expect(treasuryTokenBalance).to.equal(initialTreasuryTokenBalance - amountIn);
+      expect(treasurySilicaBalance).to.be.gte(INITIAL_MINT + minAmountOut);
+    });
+    
+    it("Should execute token to ETH trade", async function() {
+      const treasuryAddr = await silicaTreasury.getAddress();
+      const controllerAddr = await silicaAIController.getAddress();
+      const mockTokenAddr = await mockToken.getAddress();
+      const mockDexAddr = await mockDex.getAddress();
+      
+      // Initial balances
+      const initialTreasuryTokenBalance = await mockToken.balanceOf(treasuryAddr);
+      const initialTreasuryEthBalance = await ethers.provider.getBalance(treasuryAddr);
+      
+      // Prepare swap data
+      const amountIn = ethers.parseEther("1000");
+      const minAmountOut = ethers.parseEther("1800"); // Expecting 2x return from MockDex
+      const swapData = mockDex.interface.encodeFunctionData("swap", [
+        mockTokenAddr,
+        ZERO_ADDRESS, // ETH
+        amountIn,
+        minAmountOut
+      ]);
+      
+      // Execute the trade
+      await silicaAIController.connect(aiOperator).executeTrade(
+        mockTokenAddr,
+        ZERO_ADDRESS, // ETH
+        amountIn,
+        minAmountOut,
+        mockDexAddr,
+        swapData,
+        "Token to ETH swap"
+      );
+      
+      // Check results
+      const treasuryTokenBalance = await mockToken.balanceOf(treasuryAddr);
+      const treasuryEthBalance = await ethers.provider.getBalance(treasuryAddr);
+      
+      expect(treasuryTokenBalance).to.equal(initialTreasuryTokenBalance - amountIn);
+      expect(treasuryEthBalance).to.be.gte(initialTreasuryEthBalance + minAmountOut);
+    });
+    
+    it("Should execute ETH to token trade", async function() {
+      const treasuryAddr = await silicaTreasury.getAddress();
+      const controllerAddr = await silicaAIController.getAddress();
+      const mockTokenAddr = await mockToken.getAddress();
+      const mockDexAddr = await mockDex.getAddress();
+      
+      // Fund the contract with ETH
+      await owner.sendTransaction({
+        to: controllerAddr,
+        value: ethers.parseEther("10")
+      });
+      
+      // Fund the treasury with ETH
+      await owner.sendTransaction({
+        to: treasuryAddr,
+        value: ethers.parseEther("10")
+      });
+      
+      // Initial balances
+      const initialTreasuryEthBalance = await ethers.provider.getBalance(treasuryAddr);
+      const initialTreasuryTokenBalance = await mockToken.balanceOf(treasuryAddr);
+      
+      // Prepare swap data
+      const amountIn = ethers.parseEther("1");
+      const minAmountOut = ethers.parseEther("1.8"); // Expecting 2x return from MockDex
+      const swapData = mockDex.interface.encodeFunctionData("swap", [
+        ZERO_ADDRESS, // ETH
+        mockTokenAddr,
+        amountIn,
+        minAmountOut
+      ]);
+      
+      // Execute the trade
+      await silicaAIController.connect(aiOperator).executeTrade(
+        ZERO_ADDRESS, // ETH
+        mockTokenAddr,
+        amountIn,
+        minAmountOut,
+        mockDexAddr,
+        swapData,
+        "ETH to token swap"
+      );
+      
+      // Check results
+      const treasuryEthBalance = await ethers.provider.getBalance(treasuryAddr);
+      const treasuryTokenBalance = await mockToken.balanceOf(treasuryAddr);
+      
+      expect(treasuryEthBalance).to.be.lte(initialTreasuryEthBalance);
+      expect(treasuryTokenBalance).to.be.gte(initialTreasuryTokenBalance.add(minAmountOut));
+    });
+    
+    it("Should revert when trade exceeds max percentage", async function() {
+      const mockTokenAddr = await mockToken.getAddress();
+      const mockDexAddr = await mockDex.getAddress();
+      
+      // Prepare swap data for a trade that exceeds max percentage (10%)
+      const amountIn = ethers.parseEther("150000"); // 15% of initial balance
+      const minAmountOut = ethers.parseEther("250000");
+      const swapData = mockDex.interface.encodeFunctionData("swap", [
+        mockTokenAddr,
+        await silicaToken.getAddress(),
+        amountIn,
+        minAmountOut
+      ]);
+      
+      // Should revert due to exceeding max trade size
+      await expect(silicaAIController.connect(aiOperator).executeTrade(
+        mockTokenAddr,
+        await silicaToken.getAddress(),
+        amountIn,
+        minAmountOut,
+        mockDexAddr,
+        swapData,
+        "Excessive trade"
+      )).to.be.revertedWith("Trade exceeds max size");
+    });
+    
+    it("Should emit TradeExecuted event", async function() {
+      const mockTokenAddr = await mockToken.getAddress();
+      const mockDexAddr = await mockDex.getAddress();
+      const silicaTokenAddr = await silicaToken.getAddress();
+      
+      // Prepare swap data
+      const amountIn = ethers.parseEther("1000");
+      const minAmountOut = ethers.parseEther("1800");
+      const swapData = mockDex.interface.encodeFunctionData("swap", [
+        mockTokenAddr,
+        silicaTokenAddr,
+        amountIn,
+        minAmountOut
+      ]);
+      
+      // Check event emission
+      await expect(silicaAIController.connect(aiOperator).executeTrade(
+        mockTokenAddr,
+        silicaTokenAddr,
+        amountIn,
+        minAmountOut,
+        mockDexAddr,
+        swapData,
+        "Test event"
+      )).to.emit(silicaAIController, "TradeExecuted")
+        .withArgs(mockTokenAddr, silicaTokenAddr, amountIn, amountIn * BigInt(2), "Test event");
+    });
+  });
+
   // Helper contract for testing trade execution
   after(async function() {
     const MockDexFactory = await ethers.getContractFactory("MockDex");
