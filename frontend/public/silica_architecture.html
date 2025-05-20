@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silica Platform Architecture</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .diagram-container {
+            width: 800px;
+            height: 400px;
+            position: relative;
+            background-color: white;
+        }
+        .diagram-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4b0082;
+        }
+        .box {
+            position: absolute;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: white;
+            font-weight: bold;
+        }
+        .box-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .box-title {
+            font-size: 14px;
+        }
+        .layer-label {
+            position: absolute;
+            left: 0;
+            color: #666;
+            font-weight: bold;
+            font-size: 12px;
+            transform: rotate(-90deg);
+            transform-origin: left center;
+        }
+        .connection {
+            position: absolute;
+            height: 2px;
+            background-color: #ddd;
+            z-index: -1;
+        }
+        .connection-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 8px solid #ddd;
+            transform: rotate(90deg);
+            z-index: -1;
+        }
+        .legend {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(255,255,255,0.8);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <div class="diagram-title">Silica Platform Architecture</div>
+        
+        <!-- Layer labels -->
+        <div class="layer-label" style="top: 80px; left: 20px;">FRONTEND</div>
+        <div class="layer-label" style="top: 180px; left: 20px;">BLOCKCHAIN</div>
+        <div class="layer-label" style="top: 280px; left: 20px;">INFRASTRUCTURE</div>
+        
+        <!-- Frontend Layer Boxes -->
+        <div class="box" style="top: 60px; left: 100px; width: 120px; height: 50px; background-color: #6a0dad;">
+            <div class="box-icon">🖥️</div>
+            <div class="box-title">User Interface</div>
+        </div>
+        <div class="box" style="top: 60px; left: 340px; width: 120px; height: 50px; background-color: #6a0dad;">
+            <div class="box-icon">🎨</div>
+            <div class="box-title">Creator Dashboard</div>
+        </div>
+        <div class="box" style="top: 60px; left: 580px; width: 120px; height: 50px; background-color: #6a0dad;">
+            <div class="box-icon">💼</div>
+            <div class="box-title">Admin Portal</div>
+        </div>
+        
+        <!-- Blockchain Layer Boxes -->
+        <div class="box" style="top: 160px; left: 80px; width: 100px; height: 50px; background-color: #9370db;">
+            <div class="box-icon">💰</div>
+            <div class="box-title">SilicaToken</div>
+        </div>
+        <div class="box" style="top: 160px; left: 200px; width: 100px; height: 50px; background-color: #9370db;">
+            <div class="box-icon">📊</div>
+            <div class="box-title">ModelRegistry</div>
+        </div>
+        <div class="box" style="top: 160px; left: 320px; width: 100px; height: 50px; background-color: #9370db;">
+            <div class="box-icon">⚙️</div>
+            <div class="box-title">ExecutionEngine</div>
+        </div>
+        <div class="box" style="top: 160px; left: 440px; width: 100px; height: 50px; background-color: #9370db;">
+            <div class="box-icon">🧠</div>
+            <div class="box-title">AIController</div>
+        </div>
+        <div class="box" style="top: 160px; left: 560px; width: 100px; height: 50px; background-color: #9370db;">
+            <div class="box-icon">🗳️</div>
+            <div class="box-title">Governance</div>
+        </div>
+        <div class="box" style="top: 160px; left: 680px; width: 100px; height: 50px; background-color: #9370db;">
+            <div class="box-icon">💎</div>
+            <div class="box-title">Treasury</div>
+        </div>
+        
+        <!-- Infrastructure Layer Boxes -->
+        <div class="box" style="top: 260px; left: 140px; width: 140px; height: 50px; background-color: #800080;">
+            <div class="box-icon">🔗</div>
+            <div class="box-title">Ethereum Blockchain</div>
+        </div>
+        <div class="box" style="top: 260px; left: 340px; width: 140px; height: 50px; background-color: #800080;">
+            <div class="box-icon">📡</div>
+            <div class="box-title">Compute Network</div>
+        </div>
+        <div class="box" style="top: 260px; left: 540px; width: 140px; height: 50px; background-color: #800080;">
+            <div class="box-icon">📂</div>
+            <div class="box-title">Decentralized Storage</div>
+        </div>
+        
+        <!-- Connections between layers -->
+        <!-- Frontend to Blockchain -->
+        <div class="connection" style="width: 20px; top: 115px; left: 120px; transform: rotate(90deg);"></div>
+        <div class="connection-arrow" style="top: 125px; left: 127px;"></div>
+        
+        <div class="connection" style="width: 20px; top: 115px; left: 360px; transform: rotate(90deg);"></div>
+        <div class="connection-arrow" style="top: 125px; left: 367px;"></div>
+        
+        <div class="connection" style="width: 20px; top: 115px; left: 600px; transform: rotate(90deg);"></div>
+        <div class="connection-arrow" style="top: 125px; left: 607px;"></div>
+        
+        <!-- Blockchain to Infrastructure -->
+        <div class="connection" style="width: 20px; top: 215px; left: 160px; transform: rotate(90deg);"></div>
+        <div class="connection-arrow" style="top: 225px; left: 167px;"></div>
+        
+        <div class="connection" style="width: 20px; top: 215px; left: 360px; transform: rotate(90deg);"></div>
+        <div class="connection-arrow" style="top: 225px; left: 367px;"></div>
+        
+        <div class="connection" style="width: 20px; top: 215px; left: 560px; transform: rotate(90deg);"></div>
+        <div class="connection-arrow" style="top: 225px; left: 567px;"></div>
+        
+        <!-- Horizontal connections in blockchain layer -->
+        <div class="connection" style="width: 20px; top: 185px; left: 180px; transform: rotate(0deg);"></div>
+        <div class="connection-arrow" style="top: 185px; left: 192px; transform: rotate(90deg);"></div>
+        
+        <div class="connection" style="width: 20px; top: 185px; left: 300px; transform: rotate(0deg);"></div>
+        <div class="connection-arrow" style="top: 185px; left: 312px; transform: rotate(90deg);"></div>
+        
+        <div class="connection" style="width: 20px; top: 185px; left: 420px; transform: rotate(0deg);"></div>
+        <div class="connection-arrow" style="top: 185px; left: 432px; transform: rotate(90deg);"></div>
+        
+        <div class="connection" style="width: 20px; top: 185px; left: 540px; transform: rotate(0deg);"></div>
+        <div class="connection-arrow" style="top: 185px; left: 552px; transform: rotate(90deg);"></div>
+        
+        <div class="connection" style="width: 20px; top: 185px; left: 660px; transform: rotate(0deg);"></div>
+        <div class="connection-arrow" style="top: 185px; left: 672px; transform: rotate(90deg);"></div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #6a0dad;"></div>
+                <span>User Interfaces</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #9370db;"></div>
+                <span>Smart Contracts</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #800080;"></div>
+                <span>Infrastructure</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        // You can take a screenshot of this page to create the PNG file
+    </script>
+</body>
+</html>

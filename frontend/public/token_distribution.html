@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silica Token Distribution</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .chart-container {
+            width: 800px;
+            height: 400px;
+            position: relative;
+            background-color: white;
+            padding: 20px;
+        }
+        .chart-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4b0082;
+        }
+        .chart-subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        #distribution-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #distribution-table th, #distribution-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        #distribution-table th {
+            background-color: #f2f2f2;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <div class="chart-title">Silica Token Distribution</div>
+        <div class="chart-subtitle">Total Supply: 1,000,000,000 SIL</div>
+        
+        <canvas id="distributionChart"></canvas>
+        
+        <table id="distribution-table">
+            <thead>
+                <tr>
+                    <th>Allocation</th>
+                    <th>Percentage</th>
+                    <th>Amount (SIL)</th>
+                    <th>Vesting</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="color-dot" style="background-color: #4b0082;"></div>
+                        Community & Ecosystem
+                    </td>
+                    <td>40%</td>
+                    <td>400,000,000</td>
+                    <td>5-year gradual release</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="color-dot" style="background-color: #8a2be2;"></div>
+                        Treasury
+                    </td>
+                    <td>20%</td>
+                    <td>200,000,000</td>
+                    <td>Controlled by DAO</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="color-dot" style="background-color: #9370db;"></div>
+                        Team & Advisors
+                    </td>
+                    <td>15%</td>
+                    <td>150,000,000</td>
+                    <td>3-year vesting, 1-year cliff</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="color-dot" style="background-color: #ba55d3;"></div>
+                        Investors
+                    </td>
+                    <td>15%</td>
+                    <td>150,000,000</td>
+                    <td>2-year vesting</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="color-dot" style="background-color: #d8bfd8;"></div>
+                        Initial Liquidity
+                    </td>
+                    <td>10%</td>
+                    <td>100,000,000</td>
+                    <td>Immediately available</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            const distributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Community & Ecosystem', 'Treasury', 'Team & Advisors', 'Investors', 'Initial Liquidity'],
+                    datasets: [{
+                        data: [40, 20, 15, 15, 10],
+                        backgroundColor: [
+                            '#4b0082', // Indigo
+                            '#8a2be2', // BlueViolet
+                            '#9370db', // MediumPurple
+                            '#ba55d3', // MediumOrchid
+                            '#d8bfd8'  // Thistle
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const tokenAmount = (value * 10_000_000).toLocaleString() + ' SIL';
+                                    return `${label}: ${value}% (${tokenAmount})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Take a screenshot of this page to create the PNG file
+        // Or save the canvas element
+    </script>
+</body>
+</html>

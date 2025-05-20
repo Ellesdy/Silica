@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silica Logo</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .logo-container {
+            width: 800px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .silica-logo {
+            display: flex;
+            align-items: center;
+        }
+        .logo-icon {
+            width: 100px;
+            height: 100px;
+            margin-right: 20px;
+            position: relative;
+        }
+        .hexagon {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .title {
+            font-size: 72px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #4b0082, #8a2be2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+        .tagline {
+            font-size: 18px;
+            color: #666;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <div class="silica-logo">
+            <div class="logo-icon">
+                <svg class="hexagon" viewBox="0 0 100 100">
+                    <!-- Outer hexagon -->
+                    <polygon points="50,3 95,25 95,75 50,97 5,75 5,25" 
+                             fill="url(#grad)" stroke="#4b0082" stroke-width="1" />
+                    
+                    <!-- Inner hexagon -->
+                    <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" 
+                             fill="rgba(255,255,255,0.3)" />
+                    
+                    <!-- Center circle -->
+                    <circle cx="50" cy="50" r="15" fill="rgba(255,255,255,0.5)" />
+                    
+                    <!-- AI node connections - representing neural network -->
+                    <line x1="50" y1="20" x2="50" y2="35" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    <line x1="80" y1="35" x2="65" y2="50" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    <line x1="80" y1="65" x2="65" y2="50" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    <line x1="50" y1="80" x2="50" y2="65" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    <line x1="20" y1="65" x2="35" y2="50" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    <line x1="20" y1="35" x2="35" y2="50" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    
+                    <!-- Neural nodes -->
+                    <circle cx="50" cy="35" r="4" fill="white" />
+                    <circle cx="65" cy="50" r="4" fill="white" />
+                    <circle cx="50" cy="65" r="4" fill="white" />
+                    <circle cx="35" cy="50" r="4" fill="white" />
+                    <circle cx="50" cy="50" r="5" fill="white" />
+                    
+                    <!-- Gradient definition -->
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#4b0082" />
+                            <stop offset="100%" stop-color="#8a2be2" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div>
+                <div class="title">SILICA</div>
+                <div class="tagline">AI-Powered Decentralized Platform</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // You can take a screenshot of this page to create the PNG file
+        // Or right-click the logo and choose "Save image as..."
+    </script>
+</body>
+</html>
