@@ -1,0 +1,33 @@
+{
+  "title": "Silica: AI-Powered Decentralized Platform Whitepaper",
+  "version": "1.0.0",
+  "lastUpdated": "2023-11-15",
+  "authors": [
+    "Silica Foundation",
+    "Silica Development Team"
+  ],
+  "contact": "info@silica.io",
+  "website": "https://silica.io",
+  "license": "All Rights Reserved",
+  "abstract": "Silica is a decentralized AI tools development platform built on Ethereum that revolutionizes how AI models are created, shared, and monetized. The platform provides an ecosystem for AI developers to deploy their models on-chain and earn fees when others utilize them, while users can access powerful AI capabilities through a user-friendly interface.",
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "artificial intelligence",
+    "decentralized",
+    "cryptocurrency",
+    "AI marketplace",
+    "tokenomics",
+    "decentralized governance",
+    "compute providers"
+  ],
+  "citations": [
+    "Bitcoin Whitepaper by Satoshi Nakamoto",
+    "Ethereum Whitepaper by Vitalik Buterin",
+    "The Economics of Artificial Intelligence - NBER",
+    "AI Transforming the Enterprise - MIT Technology Review",
+    "Decentralized Machine Learning: Challenges and Opportunities - IEEE",
+    "Token Economy: How the Web3 reinvents the Internet by Shermin Voshmgir",
+    "The Economic Potential of Generative AI - McKinsey Global Institute"
+  ]
+}

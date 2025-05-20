@@ -51,7 +51,7 @@ export default function Whitepaper() {
             <span className="back-button">Back to Home</span>
           </Link>
           
-          <a href="/docs/whitepaper/Silica_Whitepaper.md" download className="download-button">
+          <a href="/docs/whitepaper.md" download="Silica_Whitepaper.md" className="download-button">
             Download Whitepaper
           </a>
         </div>

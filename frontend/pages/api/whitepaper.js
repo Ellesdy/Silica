@@ -5,7 +5,7 @@ import { marked } from 'marked';
 export default function handler(req, res) {
   try {
     // Get the whitepaper markdown content
-    const whitepaperPath = path.join(process.cwd(), '..', 'docs', 'whitepaper', 'Silica_Whitepaper.md');
+    const whitepaperPath = path.join(process.cwd(), '..', 'docs', 'whitepaper.md');
     const markdown = fs.readFileSync(whitepaperPath, 'utf8');
     
     // Convert markdown to HTML
