@@ -61,12 +61,23 @@ contract SilicaExecutionEngine is AccessControl, ReentrancyGuard {
         uint256 stakedAmount;
     }
     
+    // Protocol whitelist for secure investments
+    struct ProtocolInfo {
+        bool isWhitelisted;
+        uint256 whitelistedAt;
+        address whitelistedBy;
+        string name;
+        string protocolType;
+    }
+    
     // State variables
     uint256 private _requestIdCounter;
     mapping(uint256 => InferenceRequest) public requests;
     mapping(address => uint256[]) public userRequests;
     mapping(address => ComputeProvider) public computeProviders;
     mapping(address => uint256[]) public providerRequests;
+    mapping(address => ProtocolInfo) public whitelistedProtocols;
+    address[] public protocolList;
     
     PaymentDistribution public paymentDistribution;
     
@@ -84,6 +95,8 @@ contract SilicaExecutionEngine is AccessControl, ReentrancyGuard {
     event ComputeProviderStaked(address indexed provider, uint256 amount);
     event ComputeProviderUnstaked(address indexed provider, uint256 amount);
     event PaymentDistributionUpdated(uint256 creatorShare, uint256 providerShare, uint256 protocolShare);
+    event ProtocolWhitelisted(address indexed protocol, string name, string protocolType);
+    event ProtocolRemovedFromWhitelist(address indexed protocol);
     
     constructor(
         address _modelRegistry,
@@ -423,5 +436,156 @@ contract SilicaExecutionEngine is AccessControl, ReentrancyGuard {
         
         (bool treasurySuccess, ) = payable(address(treasury)).call{value: protocolAmount}("");
         require(treasurySuccess, "Failed to send payment to treasury");
+    }
+    
+    /**
+     * @dev Add a protocol to the whitelist
+     * @param targetProtocol Protocol address to whitelist
+     * @param name Protocol name
+     * @param protocolType Type of protocol (e.g., DEX, lending, etc.)
+     */
+    function addProtocolToWhitelist(
+        address targetProtocol,
+        string calldata name,
+        string calldata protocolType
+    ) 
+        external
+        onlyRole(ADMIN_ROLE)
+    {
+        require(targetProtocol != address(0), "Invalid protocol address");
+        require(bytes(name).length > 0, "Name cannot be empty");
+        require(bytes(protocolType).length > 0, "Protocol type cannot be empty");
+        require(!whitelistedProtocols[targetProtocol].isWhitelisted, "Protocol already whitelisted");
+        
+        whitelistedProtocols[targetProtocol] = ProtocolInfo({
+            isWhitelisted: true,
+            whitelistedAt: block.timestamp,
+            whitelistedBy: msg.sender,
+            name: name,
+            protocolType: protocolType
+        });
+        
+        protocolList.push(targetProtocol);
+        emit ProtocolWhitelisted(targetProtocol, name, protocolType);
+    }
+    
+    /**
+     * @dev Remove a protocol from the whitelist
+     * @param targetProtocol Protocol address to remove
+     */
+    function removeProtocolFromWhitelist(address targetProtocol) 
+        external
+        onlyRole(ADMIN_ROLE)
+    {
+        require(targetProtocol != address(0), "Invalid protocol address");
+        require(whitelistedProtocols[targetProtocol].isWhitelisted, "Protocol not whitelisted");
+        
+        whitelistedProtocols[targetProtocol].isWhitelisted = false;
+        emit ProtocolRemovedFromWhitelist(targetProtocol);
+    }
+    
+    /**
+     * @dev Get list of all whitelisted protocols
+     * @return Array of whitelisted protocol addresses
+     */
+    function getAllWhitelistedProtocols() external view returns (address[] memory) {
+        // Count active protocols
+        uint256 activeCount = 0;
+        for (uint256 i = 0; i < protocolList.length; i++) {
+            if (whitelistedProtocols[protocolList[i]].isWhitelisted) {
+                activeCount++;
+            }
+        }
+        
+        // Create result array with only active protocols
+        address[] memory activeProtocols = new address[](activeCount);
+        uint256 index = 0;
+        for (uint256 i = 0; i < protocolList.length; i++) {
+            if (whitelistedProtocols[protocolList[i]].isWhitelisted) {
+                activeProtocols[index] = protocolList[i];
+                index++;
+            }
+        }
+        
+        return activeProtocols;
+    }
+    
+    /**
+     * @dev Validates calldata for common functions to prevent malicious inputs
+     * @param targetProtocol Target protocol address
+     * @param data Encoded function call data
+     * @return True if the calldata appears safe
+     */
+    function validateCalldata(address targetProtocol, bytes calldata data) internal pure returns (bool) {
+        // Require minimum data length for function selector (4 bytes)
+        if (data.length < 4) {
+            return false;
+        }
+        
+        // Extract function selector
+        bytes4 selector;
+        assembly {
+            selector := calldataload(data.offset)
+        }
+        
+        // Check if the calldata is attempting to call sensitive functions
+        // This is a basic check and should be expanded for each protocol
+        bytes4 transferSelector = bytes4(keccak256("transfer(address,uint256)"));
+        bytes4 transferFromSelector = bytes4(keccak256("transferFrom(address,address,uint256)"));
+        bytes4 approveSelector = bytes4(keccak256("approve(address,uint256)"));
+        bytes4 delegateCallSelector = bytes4(keccak256("delegatecall(address,bytes)"));
+        
+        // Reject attempts to directly call sensitive functions
+        if (selector == transferSelector || 
+            selector == transferFromSelector || 
+            selector == approveSelector ||
+            selector == delegateCallSelector) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * @dev Execute an investment strategy through an external protocol
+     * @param targetProtocol Protocol to interact with (e.g., lending platform)
+     * @param token Token to invest
+     * @param amount Amount to invest
+     * @param data Encoded function call data
+     */
+    function executeInvestment(
+        address targetProtocol,
+        address token,
+        uint256 amount,
+        bytes calldata data
+    ) 
+        external
+        nonReentrant
+        onlyRole(AI_CONTROLLER_ROLE)
+        returns (bool success)
+    {
+        require(targetProtocol != address(0), "Invalid protocol address");
+        require(token != address(0), "Invalid token address");
+        require(amount > 0, "Amount must be greater than 0");
+        require(whitelistedProtocols[targetProtocol].isWhitelisted, "Protocol not whitelisted");
+        require(validateCalldata(targetProtocol, data), "Invalid or potentially unsafe calldata");
+        
+        // Check sufficient balance
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance >= amount, "Insufficient balance");
+        
+        // Approve token usage
+        IERC20(token).approve(targetProtocol, 0); // Reset approval first
+        IERC20(token).approve(targetProtocol, amount);
+        
+        // Execute the investment transaction
+        (success, ) = targetProtocol.call(data);
+        require(success, "Investment execution failed");
+        
+        // Reset approval
+        IERC20(token).approve(targetProtocol, 0);
+        
+        emit InvestmentExecuted(targetProtocol, token, amount, data);
+        return success;
     }
 } 

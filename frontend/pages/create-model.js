@@ -29,6 +29,16 @@ export default function CreateModel() {
     fee: '0.01'
   });
 
+  // Form validation state
+  const [formErrors, setFormErrors] = useState({
+    name: '',
+    description: '',
+    version: '',
+    uri: '',
+    endpoint: '',
+    fee: ''
+  });
+
   // Model Registry contract ABI (only the functions we need)
   const modelRegistryABI = [
     "function registerModel(string name, string description, string category, string version, string uri, string endpoint, uint256 fee) external returns (uint256)",
@@ -52,13 +62,124 @@ export default function CreateModel() {
     fetchDeployment();
   }, []);
 
-  // Handle form input changes
+  // Validate URI format
+  const validateURI = (uri) => {
+    if (!uri) return 'URI is required';
+    
+    // Check if it's a valid IPFS URI
+    if (uri.startsWith('ipfs://')) {
+      const cid = uri.slice(7);
+      if (!cid || cid.length < 10) {
+        return 'Invalid IPFS CID format';
+      }
+    } 
+    // Check if it's a valid HTTP(S) URI
+    else if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      try {
+        new URL(uri);
+      } catch {
+        return 'Invalid URL format';
+      }
+    } else {
+      return 'URI must start with ipfs://, http://, or https://';
+    }
+    
+    return '';
+  };
+
+  // Validate endpoint URI
+  const validateEndpoint = (endpoint) => {
+    if (!endpoint) return 'API endpoint is required';
+    
+    // Must be HTTP or HTTPS
+    if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
+      return 'Endpoint must start with http:// or https://';
+    }
+    
+    // Check if it's a valid URL
+    try {
+      new URL(endpoint);
+    } catch {
+      return 'Invalid URL format';
+    }
+    
+    return '';
+  };
+
+  // Validate fee amount
+  const validateFee = (fee) => {
+    if (!fee) return 'Fee is required';
+    if (isNaN(parseFloat(fee))) return 'Fee must be a number';
+    if (parseFloat(fee) < 0) return 'Fee cannot be negative';
+    return '';
+  };
+
+  // Validate the entire form
+  const validateForm = () => {
+    const errors = {
+      name: !modelData.name ? 'Model name is required' : '',
+      description: !modelData.description ? 'Description is required' : '',
+      version: !modelData.version ? 'Version is required' : '',
+      uri: validateURI(modelData.uri),
+      endpoint: validateEndpoint(modelData.endpoint),
+      fee: validateFee(modelData.fee)
+    };
+    
+    setFormErrors(errors);
+    
+    return !Object.values(errors).some(error => error);
+  };
+
+  // Handle form input changes with validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
     setModelData({
       ...modelData,
       [name]: value
     });
+    
+    // Validate the field that changed
+    switch (name) {
+      case 'name':
+        setFormErrors({
+          ...formErrors,
+          name: !value ? 'Model name is required' : ''
+        });
+        break;
+      case 'description':
+        setFormErrors({
+          ...formErrors,
+          description: !value ? 'Description is required' : ''
+        });
+        break;
+      case 'version':
+        setFormErrors({
+          ...formErrors,
+          version: !value ? 'Version is required' : ''
+        });
+        break;
+      case 'uri':
+        setFormErrors({
+          ...formErrors,
+          uri: validateURI(value)
+        });
+        break;
+      case 'endpoint':
+        setFormErrors({
+          ...formErrors,
+          endpoint: validateEndpoint(value)
+        });
+        break;
+      case 'fee':
+        setFormErrors({
+          ...formErrors,
+          fee: validateFee(value)
+        });
+        break;
+      default:
+        break;
+    }
   };
 
   // Register model function using wagmi's useWriteContract
@@ -70,6 +191,12 @@ export default function CreateModel() {
     
     if (!isConnected) {
       setMessage({ text: 'Please connect your wallet first', type: 'error' });
+      return;
+    }
+    
+    // Validate the form before submission
+    if (!validateForm()) {
+      setMessage({ text: 'Please fix the form errors before submitting', type: 'error' });
       return;
     }
     
@@ -110,6 +237,16 @@ export default function CreateModel() {
         uri: '',
         endpoint: '',
         fee: '0.01'
+      });
+      
+      // Reset validation errors
+      setFormErrors({
+        name: '',
+        description: '',
+        version: '',
+        uri: '',
+        endpoint: '',
+        fee: ''
       });
     } catch (error) {
       console.error("Error registering model:", error);
@@ -152,12 +289,13 @@ export default function CreateModel() {
                   type="text"
                   id="name"
                   name="name"
-                  className="form-control"
+                  className={`form-control ${formErrors.name ? 'error-input' : ''}`}
                   value={modelData.name}
                   onChange={handleInputChange}
                   required
                   placeholder="e.g., My Awesome AI Model"
                 />
+                {formErrors.name && <p className="error-text">{formErrors.name}</p>}
               </div>
               
               <div className="form-group">
@@ -165,13 +303,14 @@ export default function CreateModel() {
                 <textarea
                   id="description"
                   name="description"
-                  className="form-control"
+                  className={`form-control ${formErrors.description ? 'error-input' : ''}`}
                   value={modelData.description}
                   onChange={handleInputChange}
                   required
                   placeholder="Describe what your model does..."
                   rows={4}
                 ></textarea>
+                {formErrors.description && <p className="error-text">{formErrors.description}</p>}
               </div>
               
               <div className="form-row">
@@ -200,12 +339,13 @@ export default function CreateModel() {
                     type="text"
                     id="version"
                     name="version"
-                    className="form-control"
+                    className={`form-control ${formErrors.version ? 'error-input' : ''}`}
                     value={modelData.version}
                     onChange={handleInputChange}
                     required
                     placeholder="e.g., 1.0"
                   />
+                  {formErrors.version && <p className="error-text">{formErrors.version}</p>}
                 </div>
               </div>
               
@@ -215,12 +355,13 @@ export default function CreateModel() {
                   type="text"
                   id="uri"
                   name="uri"
-                  className="form-control"
+                  className={`form-control ${formErrors.uri ? 'error-input' : ''}`}
                   value={modelData.uri}
                   onChange={handleInputChange}
                   required
-                  placeholder="e.g., ipfs://..."
+                  placeholder="e.g., ipfs://... or https://..."
                 />
+                {formErrors.uri && <p className="error-text">{formErrors.uri}</p>}
               </div>
               
               <div className="form-group">
@@ -229,12 +370,13 @@ export default function CreateModel() {
                   type="text"
                   id="endpoint"
                   name="endpoint"
-                  className="form-control"
+                  className={`form-control ${formErrors.endpoint ? 'error-input' : ''}`}
                   value={modelData.endpoint}
                   onChange={handleInputChange}
                   required
                   placeholder="e.g., https://api.example.com/model"
                 />
+                {formErrors.endpoint && <p className="error-text">{formErrors.endpoint}</p>}
               </div>
               
               <div className="form-group">
@@ -245,11 +387,12 @@ export default function CreateModel() {
                   min="0"
                   id="fee"
                   name="fee"
-                  className="form-control"
+                  className={`form-control ${formErrors.fee ? 'error-input' : ''}`}
                   value={modelData.fee}
                   onChange={handleInputChange}
                   required
                 />
+                {formErrors.fee && <p className="error-text">{formErrors.fee}</p>}
               </div>
               
               <button 
@@ -339,6 +482,17 @@ export default function CreateModel() {
           .form-row {
             grid-template-columns: 1fr;
           }
+        }
+        
+        .error-input {
+          border-color: var(--error-color) !important;
+        }
+        
+        .error-text {
+          color: var(--error-color);
+          font-size: 0.85rem;
+          margin-top: 0.25rem;
+          margin-bottom: 0;
         }
       `}</style>
     </div>

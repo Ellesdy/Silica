@@ -29,6 +29,16 @@ export default function Governance() {
   const [proposalRecipient, setProposalRecipient] = useState('');
   const [proposalAmount, setProposalAmount] = useState('');
 
+  // Form validation state
+  const [formErrors, setFormErrors] = useState({
+    title: '',
+    description: '',
+    target: '',
+    value: '',
+    recipient: '',
+    amount: ''
+  });
+
   // Transaction state
   const [pendingTx, setPendingTx] = useState(null);
   const [txResult, setTxResult] = useState({ status: '', message: '', hash: '' });
@@ -163,6 +173,118 @@ export default function Governance() {
     }
   }, [isConnected, networkInfo.contracts?.SilicaGovernor]);
   
+  // Validate address format
+  const validateAddress = (address) => {
+    if (!address) return 'Address is required';
+    if (!isAddress(address)) return 'Invalid address format';
+    if (address === ethers.ZeroAddress) return 'Cannot use zero address';
+    return '';
+  };
+
+  // Validate ETH amount
+  const validateEthAmount = (amount) => {
+    if (!amount) return '';
+    if (isNaN(parseFloat(amount))) return 'Value must be a number';
+    if (parseFloat(amount) < 0) return 'Value cannot be negative';
+    return '';
+  };
+
+  // Validate token amount
+  const validateTokenAmount = (amount) => {
+    if (!amount) return 'Amount is required';
+    if (isNaN(parseFloat(amount))) return 'Amount must be a number';
+    if (parseFloat(amount) <= 0) return 'Amount must be greater than 0';
+    return '';
+  };
+
+  // Validate form input
+  const validateProposalForm = () => {
+    const errors = {
+      title: !proposalTitle ? 'Title is required' : '',
+      description: !proposalDescription ? 'Description is required' : '',
+      target: validateAddress(proposalTarget),
+      value: validateEthAmount(proposalValue),
+      recipient: proposalFunction === 'transfer' ? validateAddress(proposalRecipient) : '',
+      amount: proposalFunction === 'transfer' ? validateTokenAmount(proposalAmount) : ''
+    };
+    
+    setFormErrors(errors);
+    
+    return !Object.values(errors).some(error => error);
+  };
+
+  // Handle input changes with validation
+  const handleTitleChange = (e) => {
+    const value = e.target.value;
+    setProposalTitle(value);
+    setFormErrors({
+      ...formErrors,
+      title: !value ? 'Title is required' : ''
+    });
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    setProposalDescription(value);
+    setFormErrors({
+      ...formErrors,
+      description: !value ? 'Description is required' : ''
+    });
+  };
+
+  const handleTargetChange = (e) => {
+    const value = e.target.value;
+    setProposalTarget(value);
+    if (value) {
+      setFormErrors({
+        ...formErrors,
+        target: validateAddress(value)
+      });
+    }
+  };
+
+  const handleValueChange = (e) => {
+    const value = e.target.value;
+    setProposalValue(value);
+    setFormErrors({
+      ...formErrors,
+      value: validateEthAmount(value)
+    });
+  };
+
+  const handleRecipientChange = (e) => {
+    const value = e.target.value;
+    setProposalRecipient(value);
+    if (proposalFunction === 'transfer') {
+      setFormErrors({
+        ...formErrors,
+        recipient: validateAddress(value)
+      });
+    }
+  };
+
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    setProposalAmount(value);
+    if (proposalFunction === 'transfer') {
+      setFormErrors({
+        ...formErrors,
+        amount: validateTokenAmount(value)
+      });
+    }
+  };
+
+  const handleFunctionChange = (e) => {
+    const value = e.target.value;
+    setProposalFunction(value);
+    // Reset validation errors for function-specific fields
+    setFormErrors({
+      ...formErrors,
+      recipient: '',
+      amount: ''
+    });
+  };
+
   // Handle proposal creation
   const createProposal = async () => {
     if (!isConnected || !networkInfo.contracts?.SilicaGovernor) {
@@ -174,10 +296,10 @@ export default function Governance() {
       return;
     }
     
-    if (!proposalTitle || !proposalDescription || !proposalTarget || !isAddress(proposalTarget)) {
+    if (!validateProposalForm()) {
       setTxResult({ 
         status: 'error', 
-        message: 'Please fill all required fields with valid data',
+        message: 'Please fix the form errors before submitting',
         hash: ''
       });
       return;
@@ -193,10 +315,6 @@ export default function Governance() {
       
       // Generate calldata based on function selection
       if (proposalFunction === 'transfer') {
-        if (!proposalRecipient || !isAddress(proposalRecipient) || !proposalAmount) {
-          throw new Error('Invalid recipient or amount for transfer');
-        }
-        
         const amount = parseEther(proposalAmount);
         const erc20Interface = new ethers.Interface(erc20ABI);
         calldatas = [erc20Interface.encodeFunctionData('transfer', [proposalRecipient, amount])];
@@ -227,6 +345,14 @@ export default function Governance() {
       setProposalFunction('transfer');
       setProposalRecipient('');
       setProposalAmount('');
+      setFormErrors({
+        title: '',
+        description: '',
+        target: '',
+        value: '',
+        recipient: '',
+        amount: ''
+      });
       
       // Refresh proposals after a short delay
       setTimeout(() => fetchProposals(), 3000);
@@ -340,8 +466,12 @@ export default function Governance() {
                         type="text"
                         placeholder="Proposal Title"
                         value={proposalTitle}
-                        onChange={(e) => setProposalTitle(e.target.value)}
+                        onChange={handleTitleChange}
+                        className={formErrors.title ? 'input-error' : ''}
                       />
+                      {formErrors.title && (
+                        <p className="error-message">{formErrors.title}</p>
+                      )}
                     </div>
                     
                     <div className="form-group">
@@ -350,9 +480,13 @@ export default function Governance() {
                         id="proposalDescription"
                         placeholder="Detailed description of the proposal"
                         value={proposalDescription}
-                        onChange={(e) => setProposalDescription(e.target.value)}
+                        onChange={handleDescriptionChange}
                         rows={4}
+                        className={formErrors.description ? 'input-error' : ''}
                       />
+                      {formErrors.description && (
+                        <p className="error-message">{formErrors.description}</p>
+                      )}
                     </div>
                     
                     <div className="form-group">
@@ -360,7 +494,8 @@ export default function Governance() {
                       <select
                         id="proposalTarget"
                         value={proposalTarget}
-                        onChange={(e) => setProposalTarget(e.target.value)}
+                        onChange={handleTargetChange}
+                        className={formErrors.target ? 'input-error' : ''}
                       >
                         <option value="">Select Contract</option>
                         <option value={networkInfo.contracts?.SilicaToken}>SilicaToken</option>
@@ -368,6 +503,9 @@ export default function Governance() {
                         <option value={networkInfo.contracts?.SilicaModelRegistry}>SilicaModelRegistry</option>
                         <option value={networkInfo.contracts?.SilicaExecutionEngine}>SilicaExecutionEngine</option>
                       </select>
+                      {formErrors.target && (
+                        <p className="error-message">{formErrors.target}</p>
+                      )}
                     </div>
                     
                     <div className="form-group">
@@ -377,8 +515,12 @@ export default function Governance() {
                         type="text"
                         placeholder="0"
                         value={proposalValue}
-                        onChange={(e) => setProposalValue(e.target.value)}
+                        onChange={handleValueChange}
+                        className={formErrors.value ? 'input-error' : ''}
                       />
+                      {formErrors.value && (
+                        <p className="error-message">{formErrors.value}</p>
+                      )}
                       <small>Only needed for ETH transfers</small>
                     </div>
                     
@@ -387,7 +529,7 @@ export default function Governance() {
                       <select
                         id="proposalFunction"
                         value={proposalFunction}
-                        onChange={(e) => setProposalFunction(e.target.value)}
+                        onChange={handleFunctionChange}
                       >
                         <option value="transfer">Token Transfer</option>
                       </select>
@@ -402,8 +544,12 @@ export default function Governance() {
                             type="text"
                             placeholder="0x..."
                             value={proposalRecipient}
-                            onChange={(e) => setProposalRecipient(e.target.value)}
+                            onChange={handleRecipientChange}
+                            className={formErrors.recipient ? 'input-error' : ''}
                           />
+                          {formErrors.recipient && (
+                            <p className="error-message">{formErrors.recipient}</p>
+                          )}
                         </div>
                         
                         <div className="form-group">
@@ -413,8 +559,12 @@ export default function Governance() {
                             type="text"
                             placeholder="0.0"
                             value={proposalAmount}
-                            onChange={(e) => setProposalAmount(e.target.value)}
+                            onChange={handleAmountChange}
+                            className={formErrors.amount ? 'input-error' : ''}
                           />
+                          {formErrors.amount && (
+                            <p className="error-message">{formErrors.amount}</p>
+                          )}
                         </div>
                       </>
                     )}
