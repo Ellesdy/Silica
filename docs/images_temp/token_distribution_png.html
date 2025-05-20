@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silica Token Distribution PNG</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #canvasContainer {
+            margin-bottom: 20px;
+            width: 800px;
+            height: 400px;
+        }
+        #chartCanvas {
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4b0082;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #6a0dad;
+        }
+        p {
+            margin-top: 20px;
+            max-width: 600px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Silica Token Distribution PNG Generator</h1>
+    
+    <div id="canvasContainer">
+        <canvas id="chartCanvas" width="800" height="400"></canvas>
+    </div>
+    
+    <button id="downloadBtn">Download token_distribution.png</button>
+    
+    <p>After clicking download, the image will be saved to your downloads folder. 
+       Move it to the docs/images directory in your Silica project.</p>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw chart title
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#4b0082';
+            ctx.textAlign = 'center';
+            ctx.fillText('Silica Token Distribution', 400, 30);
+            
+            // Draw subtitle
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#666';
+            ctx.fillText('Total Supply: 1,000,000,000 SIL', 400, 55);
+            
+            // Define allocation data
+            const allocations = [
+                { name: 'Community & Ecosystem', percentage: 40, amount: '400,000,000', vesting: '5-year gradual release', color: '#4b0082' },
+                { name: 'Treasury', percentage: 20, amount: '200,000,000', vesting: 'Controlled by DAO', color: '#8a2be2' },
+                { name: 'Team & Advisors', percentage: 15, amount: '150,000,000', vesting: '3-year vesting, 1-year cliff', color: '#9370db' },
+                { name: 'Investors', percentage: 15, amount: '150,000,000', vesting: '2-year vesting', color: '#ba55d3' },
+                { name: 'Initial Liquidity', percentage: 10, amount: '100,000,000', vesting: 'Immediately available', color: '#d8bfd8' }
+            ];
+            
+            // Draw pie chart
+            drawPieChart(ctx, allocations);
+            
+            // Draw table
+            drawTable(ctx, allocations);
+            
+            // Set up download button
+            document.getElementById('downloadBtn').addEventListener('click', function() {
+                const link = document.createElement('a');
+                link.download = 'token_distribution.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+        
+        function drawPieChart(ctx, allocations) {
+            // Chart dimensions
+            const centerX = 250;
+            const centerY = 160;
+            const radius = 100;
+            
+            // Draw pie slices
+            let startAngle = -Math.PI / 2; // Start at top
+            
+            allocations.forEach(allocation => {
+                const sliceAngle = (allocation.percentage / 100) * Math.PI * 2;
+                
+                // Draw slice
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                ctx.closePath();
+                
+                // Fill slice
+                ctx.fillStyle = allocation.color;
+                ctx.fill();
+                
+                // Stroke slice
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                startAngle += sliceAngle;
+            });
+            
+            // Draw chart legend
+            drawLegend(ctx, allocations, 400, 120);
+        }
+        
+        function drawLegend(ctx, allocations, x, y) {
+            const lineHeight = 30;
+            const dotSize = 12;
+            
+            ctx.textAlign = 'left';
+            
+            allocations.forEach((allocation, index) => {
+                const yPos = y + index * lineHeight;
+                
+                // Draw color dot
+                ctx.fillStyle = allocation.color;
+                ctx.beginPath();
+                ctx.arc(x, yPos, dotSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw label
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(allocation.name + ': ' + allocation.percentage + '%', x + 15, yPos + 5);
+            });
+        }
+        
+        function drawTable(ctx, allocations) {
+            // Table position and dimensions
+            const tableX = 80;
+            const tableY = 275;
+            const tableWidth = 640;
+            const rowHeight = 30;
+            const colWidths = [200, 100, 140, 200];
+            
+            // Draw table headers
+            const headers = ['Allocation', 'Percentage', 'Amount (SIL)', 'Vesting'];
+            
+            // Draw header background
+            ctx.fillStyle = '#f2f2f2';
+            ctx.fillRect(tableX, tableY, tableWidth, rowHeight);
+            
+            // Draw header border
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(tableX, tableY, tableWidth, rowHeight);
+            
+            // Draw header text
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            
+            let xOffset = tableX + 10;
+            headers.forEach((header, index) => {
+                ctx.fillText(header, xOffset, tableY + 20);
+                xOffset += colWidths[index];
+            });
+            
+            // Draw rows
+            allocations.forEach((allocation, rowIndex) => {
+                const rowY = tableY + (rowIndex + 1) * rowHeight;
+                
+                // Draw row border
+                ctx.strokeRect(tableX, rowY, tableWidth, rowHeight);
+                
+                // Draw allocation name with color dot
+                ctx.fillStyle = allocation.color;
+                ctx.beginPath();
+                ctx.arc(tableX + 15, rowY + 15, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '14px Arial';
+                ctx.fillText(allocation.name, tableX + 30, rowY + 20);
+                
+                // Draw percentage
+                ctx.fillText(allocation.percentage + '%', tableX + colWidths[0] + 10, rowY + 20);
+                
+                // Draw amount
+                ctx.fillText(allocation.amount, tableX + colWidths[0] + colWidths[1] + 10, rowY + 20);
+                
+                // Draw vesting
+                ctx.fillText(allocation.vesting, tableX + colWidths[0] + colWidths[1] + colWidths[2] + 10, rowY + 20);
+            });
+        }
+    </script>
+</body>
+</html>
