@@ -4,12 +4,13 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
  * @title SilicaTreasury
  * @dev Treasury contract for the Silica DAO that manages funds
  */
-contract SilicaTreasury is AccessControl {
+contract SilicaTreasury is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     bytes32 public constant GOVERNOR_ROLE = keccak256("GOVERNOR_ROLE");
@@ -19,6 +20,7 @@ contract SilicaTreasury is AccessControl {
     event FundsWithdrawn(address indexed token, address indexed to, uint256 amount);
     event AssetAdded(address indexed token, string name, string assetType);
     event InvestmentExecuted(address indexed targetProtocol, address indexed token, uint256 amount, bytes data);
+    event ETHReceived(address indexed from, uint256 amount);
     
     // Asset tracking
     struct Asset {
@@ -30,7 +32,13 @@ contract SilicaTreasury is AccessControl {
     mapping(address => Asset) public assets;
     address[] public assetList;
     
+    // Withdrawal limits
+    uint256 public dailyWithdrawalLimit = 1000 ether;
+    mapping(uint256 => uint256) public dailyWithdrawals; // day => amount
+    
     constructor(address governor) {
+        require(governor != address(0), "Governor cannot be zero address");
+        
         _grantRole(DEFAULT_ADMIN_ROLE, governor);
         _grantRole(GOVERNOR_ROLE, governor);
         
@@ -44,7 +52,10 @@ contract SilicaTreasury is AccessControl {
      * @param token The ERC20 token to deposit
      * @param amount The amount to deposit
      */
-    function depositFunds(address token, uint256 amount) external {
+    function depositFunds(address token, uint256 amount) external nonReentrant {
+        require(token != address(0), "Invalid token address");
+        require(amount > 0, "Amount must be greater than 0");
+        
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         emit FundsDeposited(token, msg.sender, amount);
     }
@@ -55,7 +66,23 @@ contract SilicaTreasury is AccessControl {
      * @param to The recipient address
      * @param amount The amount to withdraw
      */
-    function withdrawFunds(address token, address to, uint256 amount) external onlyRole(GOVERNOR_ROLE) {
+    function withdrawFunds(address token, address to, uint256 amount) external nonReentrant onlyRole(GOVERNOR_ROLE) {
+        require(token != address(0), "Invalid token address");
+        require(to != address(0), "Invalid recipient address");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // Check withdrawal limit
+        uint256 today = block.timestamp / 1 days;
+        uint256 newDailyTotal = dailyWithdrawals[today] + amount;
+        require(newDailyTotal <= dailyWithdrawalLimit, "Daily withdrawal limit exceeded");
+        
+        // Update withdrawal tracking
+        dailyWithdrawals[today] = newDailyTotal;
+        
+        // Check sufficient balance
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance >= amount, "Insufficient balance");
+        
         IERC20(token).safeTransfer(to, amount);
         emit FundsWithdrawn(token, to, amount);
     }
@@ -70,6 +97,9 @@ contract SilicaTreasury is AccessControl {
         external
         onlyRole(GOVERNOR_ROLE)
     {
+        require(token != address(0), "Invalid token address");
+        require(bytes(name).length > 0, "Name cannot be empty");
+        require(bytes(assetType).length > 0, "Asset type cannot be empty");
         require(!assets[token].isActive, "Asset already exists");
         
         assets[token] = Asset({
@@ -87,6 +117,7 @@ contract SilicaTreasury is AccessControl {
      * @param controller The AI controller address
      */
     function setAIController(address controller) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(controller != address(0), "Invalid controller address");
         _grantRole(AI_CONTROLLER_ROLE, controller);
         _grantRole(GOVERNOR_ROLE, controller);
     }
@@ -105,10 +136,20 @@ contract SilicaTreasury is AccessControl {
         bytes calldata data
     ) 
         external
+        nonReentrant
         onlyRole(AI_CONTROLLER_ROLE)
         returns (bool success)
     {
+        require(targetProtocol != address(0), "Invalid protocol address");
+        require(token != address(0), "Invalid token address");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // Check sufficient balance
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance >= amount, "Insufficient balance");
+        
         // Approve token usage
+        IERC20(token).approve(targetProtocol, 0); // Reset approval first
         IERC20(token).approve(targetProtocol, amount);
         
         // Execute the investment transaction
@@ -123,11 +164,21 @@ contract SilicaTreasury is AccessControl {
     }
     
     /**
+     * @dev Update daily withdrawal limit
+     * @param newLimit New daily withdrawal limit
+     */
+    function setDailyWithdrawalLimit(uint256 newLimit) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newLimit > 0, "Limit must be greater than 0");
+        dailyWithdrawalLimit = newLimit;
+    }
+    
+    /**
      * @dev Get token balance of the treasury
      * @param token The ERC20 token address
      * @return The balance of tokens held by the treasury
      */
     function getTokenBalance(address token) external view returns (uint256) {
+        require(token != address(0), "Invalid token address");
         return IERC20(token).balanceOf(address(this));
     }
     
@@ -140,9 +191,45 @@ contract SilicaTreasury is AccessControl {
     }
     
     /**
+     * @dev Get today's total withdrawals
+     * @return Total withdrawals made today
+     */
+    function getTodayWithdrawals() external view returns (uint256) {
+        uint256 today = block.timestamp / 1 days;
+        return dailyWithdrawals[today];
+    }
+    
+    /**
      * @dev Receive ETH
      */
     receive() external payable {
         emit FundsDeposited(address(0), msg.sender, msg.value);
+        emit ETHReceived(msg.sender, msg.value);
+    }
+    
+    /**
+     * @dev Withdraw ETH from the treasury
+     * @param to The recipient address
+     * @param amount The amount to withdraw
+     */
+    function withdrawETH(address payable to, uint256 amount) external nonReentrant onlyRole(GOVERNOR_ROLE) {
+        require(to != address(0), "Invalid recipient address");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // Check withdrawal limit
+        uint256 today = block.timestamp / 1 days;
+        uint256 newDailyTotal = dailyWithdrawals[today] + amount;
+        require(newDailyTotal <= dailyWithdrawalLimit, "Daily withdrawal limit exceeded");
+        
+        // Update withdrawal tracking
+        dailyWithdrawals[today] = newDailyTotal;
+        
+        // Check sufficient balance
+        require(address(this).balance >= amount, "Insufficient balance");
+        
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "ETH transfer failed");
+        
+        emit FundsWithdrawn(address(0), to, amount);
     }
 } 

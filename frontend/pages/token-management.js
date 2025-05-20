@@ -23,6 +23,13 @@ export default function TokenManagement() {
   const [transferAmount, setTransferAmount] = useState('');
   const [delegateTo, setDelegateTo] = useState('');
   
+  // Validation state
+  const [formErrors, setFormErrors] = useState({
+    transferTo: '',
+    transferAmount: '',
+    delegateTo: ''
+  });
+  
   // Transaction state
   const [pendingTx, setPendingTx] = useState(null);
   const [txResult, setTxResult] = useState({ status: '', message: '', hash: '' });
@@ -109,6 +116,96 @@ export default function TokenManagement() {
     }
   };
   
+  // Validate address format
+  const validateAddress = (address) => {
+    if (!address) return 'Address is required';
+    if (!isAddress(address)) return 'Invalid address format';
+    if (address === ethers.ZeroAddress) return 'Cannot use zero address';
+    return '';
+  };
+
+  // Validate amount
+  const validateAmount = (amount, maxAmount) => {
+    if (!amount) return 'Amount is required';
+    if (isNaN(parseFloat(amount))) return 'Amount must be a number';
+    if (parseFloat(amount) <= 0) return 'Amount must be greater than 0';
+    
+    try {
+      const parsedAmount = parseEther(amount);
+      if (maxAmount && parsedAmount > maxAmount) {
+        return 'Amount exceeds your balance';
+      }
+    } catch (error) {
+      return 'Invalid amount format';
+    }
+    
+    return '';
+  };
+
+  // Validate form input
+  const validateTransferForm = () => {
+    const errors = {
+      transferTo: validateAddress(transferTo),
+      transferAmount: validateAmount(transferAmount, balanceData)
+    };
+    
+    setFormErrors({
+      ...formErrors,
+      transferTo: errors.transferTo,
+      transferAmount: errors.transferAmount
+    });
+    
+    return !errors.transferTo && !errors.transferAmount;
+  };
+
+  // Validate delegation form
+  const validateDelegateForm = () => {
+    const errors = {
+      delegateTo: validateAddress(delegateTo)
+    };
+    
+    setFormErrors({
+      ...formErrors,
+      delegateTo: errors.delegateTo
+    });
+    
+    return !errors.delegateTo;
+  };
+
+  // Handle input changes
+  const handleTransferToChange = (e) => {
+    const value = e.target.value;
+    setTransferTo(value);
+    if (value) {
+      setFormErrors({
+        ...formErrors,
+        transferTo: validateAddress(value)
+      });
+    }
+  };
+
+  const handleTransferAmountChange = (e) => {
+    const value = e.target.value;
+    setTransferAmount(value);
+    if (value) {
+      setFormErrors({
+        ...formErrors,
+        transferAmount: validateAmount(value, balanceData)
+      });
+    }
+  };
+
+  const handleDelegateToChange = (e) => {
+    const value = e.target.value;
+    setDelegateTo(value);
+    if (value) {
+      setFormErrors({
+        ...formErrors,
+        delegateTo: validateAddress(value)
+      });
+    }
+  };
+
   // Transfer tokens
   const handleTransfer = async () => {
     if (!isConnected || !networkInfo.contracts?.SilicaToken) {
@@ -120,19 +217,11 @@ export default function TokenManagement() {
       return;
     }
     
-    if (!transferTo || !transferAmount) {
+    if (!validateTransferForm()) {
+      // Form validation failed, errors are already set
       setTxResult({ 
         status: 'error', 
-        message: 'Please enter both recipient address and amount',
-        hash: ''
-      });
-      return;
-    }
-    
-    if (!isAddress(transferTo)) {
-      setTxResult({ 
-        status: 'error', 
-        message: 'Invalid recipient address',
+        message: 'Please fix the form errors before submitting',
         hash: ''
       });
       return;
@@ -140,7 +229,6 @@ export default function TokenManagement() {
     
     try {
       const amount = parseEther(transferAmount);
-      if (amount <= 0) throw new Error("Amount must be greater than 0");
       
       setPendingTx('transfer');
       setTxResult({ status: 'pending', message: 'Transaction pending...', hash: '' });
@@ -161,6 +249,11 @@ export default function TokenManagement() {
       // Reset form
       setTransferTo('');
       setTransferAmount('');
+      setFormErrors({
+        ...formErrors,
+        transferTo: '',
+        transferAmount: ''
+      });
       
       // Refresh data after a short delay
       setTimeout(() => refreshData(), 2000);
@@ -187,19 +280,11 @@ export default function TokenManagement() {
       return;
     }
     
-    if (!delegateTo) {
+    if (!validateDelegateForm()) {
+      // Form validation failed, errors are already set
       setTxResult({ 
         status: 'error', 
-        message: 'Please enter delegate address',
-        hash: ''
-      });
-      return;
-    }
-    
-    if (!isAddress(delegateTo)) {
-      setTxResult({ 
-        status: 'error', 
-        message: 'Invalid delegate address',
+        message: 'Please fix the form errors before submitting',
         hash: ''
       });
       return;
@@ -224,6 +309,10 @@ export default function TokenManagement() {
       
       // Reset form
       setDelegateTo('');
+      setFormErrors({
+        ...formErrors,
+        delegateTo: ''
+      });
       
       // Refresh data after a short delay
       setTimeout(() => refreshData(), 2000);
@@ -386,8 +475,12 @@ export default function TokenManagement() {
                       type="text"
                       placeholder="0x..."
                       value={transferTo}
-                      onChange={(e) => setTransferTo(e.target.value)}
+                      onChange={handleTransferToChange}
+                      className={formErrors.transferTo ? 'input-error' : ''}
                     />
+                    {formErrors.transferTo && (
+                      <p className="error-message">{formErrors.transferTo}</p>
+                    )}
                   </div>
                   <div className="form-group">
                     <label htmlFor="transferAmount">Amount (SIL)</label>
@@ -396,13 +489,18 @@ export default function TokenManagement() {
                       type="text"
                       placeholder="0.0"
                       value={transferAmount}
-                      onChange={(e) => setTransferAmount(e.target.value)}
+                      onChange={handleTransferAmountChange}
+                      className={formErrors.transferAmount ? 'input-error' : ''}
                     />
+                    {formErrors.transferAmount && (
+                      <p className="error-message">{formErrors.transferAmount}</p>
+                    )}
+                    <p className="balance-info">Available: {Number(balance).toLocaleString()} SIL</p>
                   </div>
                   <button 
                     className="action-button primary"
                     onClick={handleTransfer}
-                    disabled={pendingTx === 'transfer'}
+                    disabled={pendingTx === 'transfer' || !!formErrors.transferTo || !!formErrors.transferAmount}
                   >
                     {pendingTx === 'transfer' ? 'Transferring...' : 'Transfer Tokens'}
                   </button>
@@ -417,13 +515,17 @@ export default function TokenManagement() {
                       type="text"
                       placeholder="0x..."
                       value={delegateTo}
-                      onChange={(e) => setDelegateTo(e.target.value)}
+                      onChange={handleDelegateToChange}
+                      className={formErrors.delegateTo ? 'input-error' : ''}
                     />
+                    {formErrors.delegateTo && (
+                      <p className="error-message">{formErrors.delegateTo}</p>
+                    )}
                   </div>
                   <button 
                     className="action-button primary"
                     onClick={handleDelegate}
-                    disabled={pendingTx === 'delegate'}
+                    disabled={pendingTx === 'delegate' || !!formErrors.delegateTo}
                   >
                     {pendingTx === 'delegate' ? 'Delegating...' : 'Delegate to Address'}
                   </button>
