@@ -74,7 +74,10 @@ export default function Header() {
           <div className="logo">
             <Link href="/">
               <span className="logo-link">
-                <img src="/silica-icon.svg" alt="Silica Logo" className="logo-img" />
+                <div className="logo-placeholder">
+                  {/* Logo placeholder for future update */}
+                  <div className="logo-placeholder-text">LOGO</div>
+                </div>
                 <span className="logo-text">Silica</span>
               </span>
             </Link>
@@ -171,15 +174,28 @@ export default function Header() {
             cursor: pointer;
           }
           
-          .logo-img {
-            width: 32px;
-            height: 32px;
+          .logo-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          }
+          
+          .logo-placeholder-text {
+            color: #121212;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
           }
           
           .logo-text {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(90deg, var(--accent-color), #6d28d9);
+            background: linear-gradient(90deg, var(--accent-color), #F5C518);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -246,9 +262,9 @@ export default function Header() {
           
           .token-balance {
             padding: 0.3rem 0.6rem;
-            background-color: rgba(99, 102, 241, 0.1);
+            background-color: rgba(255, 215, 0, 0.15);
             color: var(--accent-color);
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 6px;
             font-size: 0.9rem;
             font-weight: 500;

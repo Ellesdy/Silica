@@ -21,7 +21,10 @@ export default function MobileMenu({ isOpen, onClose }) {
       <div className="mobile-menu">
         <div className="menu-header">
           <div className="logo">
-            <img src="/silica-icon.svg" alt="Silica Logo" className="logo-img" />
+            <div className="logo-placeholder">
+              {/* Logo placeholder for future update */}
+              <div className="logo-placeholder-text">LOGO</div>
+            </div>
             <span className="logo-text">Silica</span>
           </div>
           <button onClick={onClose} className="close-button">×</button>
@@ -117,15 +120,28 @@ export default function MobileMenu({ isOpen, onClose }) {
           gap: 0.5rem;
         }
         
-        .logo-img {
-          width: 28px;
-          height: 28px;
+        .logo-placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 35px;
+          height: 35px;
+          background-color: var(--accent-color);
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo-placeholder-text {
+          color: #121212;
+          font-size: 0.7rem;
+          font-weight: bold;
+          letter-spacing: 0.5px;
         }
         
         .logo-text {
           font-size: 1.3rem;
           font-weight: 700;
-          background: linear-gradient(90deg, var(--accent-color), #6d28d9);
+          background: linear-gradient(90deg, var(--accent-color), #F5C518);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -182,9 +198,11 @@ export default function MobileMenu({ isOpen, onClose }) {
         }
         
         .mobile-wallet-address {
-          background-color: var(--bg-secondary);
+          background-color: rgba(255, 215, 0, 0.15);
+          color: var(--accent-color);
           padding: 0.5rem;
           border-radius: 6px;
+          border: 1px solid rgba(255, 215, 0, 0.3);
           font-size: 0.9rem;
           text-align: center;
         }

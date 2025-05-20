@@ -90,7 +90,7 @@ const safeStorage = {
 
 function MyApp({ Component, pageProps }) {
   // State for dark mode
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -109,15 +109,14 @@ function MyApp({ Component, pageProps }) {
         if (savedMode !== null) {
           setDarkMode(savedMode === 'true');
         } else {
-          // Check for user's system preference
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          setDarkMode(prefersDark);
-          safeStorage.setItem('darkMode', prefersDark);
+          // Default to dark mode
+          setDarkMode(true);
+          safeStorage.setItem('darkMode', 'true');
         }
       } catch (error) {
         console.error("Error initializing dark mode:", error);
-        // Default to light mode on error
-        setDarkMode(false);
+        // Default to dark mode on error
+        setDarkMode(true);
       }
     }
   }, []);
@@ -140,7 +139,10 @@ function MyApp({ Component, pageProps }) {
               <div className="header-container">
                 <Link href="/" className="logo-link">
                   <div className="logo">
-                    <img src="/silica-icon.svg" alt="Silica" width="32" height="32" />
+                    <div className="logo-placeholder">
+                      {/* Logo placeholder for future update */}
+                      <div className="logo-placeholder-text">LOGO</div>
+                    </div>
                     <span>Silica</span>
                   </div>
                 </Link>
@@ -219,6 +221,24 @@ function MyApp({ Component, pageProps }) {
           gap: 0.75rem;
           font-weight: 600;
           font-size: 1.2rem;
+        }
+        
+        .logo-placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          background-color: var(--accent-color);
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo-placeholder-text {
+          color: #121212;
+          font-size: 0.8rem;
+          font-weight: bold;
+          letter-spacing: 0.5px;
         }
         
         .main-nav {

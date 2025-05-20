@@ -20,12 +20,12 @@
   --bg-secondary: #1e1e1e;
   --text-primary: #f0f0f0;
   --text-secondary: #b3b3b3;
-  --accent-color: #3b82f6;
-  --accent-hover: #60a5fa;
+  --accent-color: #FFD700; /* Gold */
+  --accent-hover: #F5C518; /* Slightly darker gold */
   --border-color: #2e2e2e;
   --card-bg: #1a1a1a;
   --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --header-bg: rgba(18, 18, 18, 0.8);
+  --header-bg: rgba(18, 18, 18, 0.9);
   --success-color: #059669;
   --error-color: #dc2626;
   --warning-color: #d97706;
@@ -138,7 +138,7 @@ button {
   line-height: 1.15;
   font-size: 3.5rem;
   text-align: center;
-  background: linear-gradient(90deg, var(--accent-color), #6d28d9);
+  background: linear-gradient(90deg, var(--accent-color), #F5C518);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
