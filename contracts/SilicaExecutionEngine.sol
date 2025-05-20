@@ -261,9 +261,15 @@ contract SilicaExecutionEngine is AccessControl, ReentrancyGuard {
         require(bytes(name).length > 0, "Name cannot be empty");
         require(bytes(endpoint).length > 0, "Endpoint cannot be empty");
         require(stakeAmount >= minimumStake, "Insufficient stake");
+        require(capacityGPUs > 0, "Must provide at least 1 GPU");
+        require(computeProviders[msg.sender].providerAddress == address(0), "Provider already registered");
+        
+        // Check token balance
+        require(silicaToken.balanceOf(msg.sender) >= stakeAmount, "Insufficient token balance");
         
         // Transfer tokens from provider to this contract
-        silicaToken.transferFrom(msg.sender, address(this), stakeAmount);
+        bool success = silicaToken.transferFrom(msg.sender, address(this), stakeAmount);
+        require(success, "Token transfer failed");
         
         // Register provider
         computeProviders[msg.sender] = ComputeProvider({
@@ -396,15 +402,26 @@ contract SilicaExecutionEngine is AccessControl, ReentrancyGuard {
         SilicaModelRegistry.ModelMetadata memory model = modelRegistry.getModel(request.modelId);
         
         uint256 fee = request.fee;
+        require(fee > 0, "No payment to distribute");
         
         // Calculate shares
         uint256 creatorAmount = (fee * paymentDistribution.creatorShare) / 10000;
         uint256 providerAmount = (fee * paymentDistribution.providerShare) / 10000;
         uint256 protocolAmount = (fee * paymentDistribution.protocolShare) / 10000;
         
-        // Distribute payments
-        payable(model.creator).transfer(creatorAmount);
-        payable(request.computeProvider).transfer(providerAmount);
-        payable(address(treasury)).transfer(protocolAmount);
+        // Validate addresses
+        require(model.creator != address(0), "Invalid model creator address");
+        require(request.computeProvider != address(0), "Invalid compute provider address");
+        require(address(treasury) != address(0), "Invalid treasury address");
+        
+        // Distribute payments - use call with success check to prevent revert on transfer failure
+        (bool creatorSuccess, ) = payable(model.creator).call{value: creatorAmount}("");
+        require(creatorSuccess, "Failed to send payment to creator");
+        
+        (bool providerSuccess, ) = payable(request.computeProvider).call{value: providerAmount}("");
+        require(providerSuccess, "Failed to send payment to provider");
+        
+        (bool treasurySuccess, ) = payable(address(treasury)).call{value: protocolAmount}("");
+        require(treasurySuccess, "Failed to send payment to treasury");
     }
 } 

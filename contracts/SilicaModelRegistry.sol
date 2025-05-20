@@ -131,6 +131,8 @@ contract SilicaModelRegistry is AccessControl, ReentrancyGuard {
         ModelMetadata storage model = models[modelId];
         require(model.creator == msg.sender || hasRole(ADMIN_ROLE, msg.sender), "Not authorized");
         require(model.id == modelId, "Model does not exist");
+        require(bytes(version).length > 0, "Version cannot be empty");
+        require(bytes(storageURI).length > 0, "Storage URI cannot be empty");
         
         model.version = version;
         model.storageURI = storageURI;
@@ -180,6 +182,7 @@ contract SilicaModelRegistry is AccessControl, ReentrancyGuard {
         ModelMetadata storage model = models[modelId];
         require(model.id == modelId, "Model does not exist");
         require(model.isActive, "Model is not active");
+        require(user != address(0), "Invalid user address");
         
         // Update usage statistics
         model.usageCount++;
